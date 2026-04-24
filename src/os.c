@@ -135,7 +135,9 @@ static void * ld_routine(void * args) {
 #endif
 	i=0;
 	printf("ld_routine\n");
+
 	while (i < num_processes) {
+
 		struct pcb_t * proc = load(ld_processes.path[i]);
 		struct krnl_t * krnl = proc->krnl = &os;	
 
@@ -154,7 +156,9 @@ static void * ld_routine(void * args) {
 #endif
 		printf("\tLoaded a process at %s, PID: %d PRIO: %ld\n",
 			ld_processes.path[i], proc->pid, ld_processes.prio[i]);
+
 		add_proc(proc);
+		printf("i: %d, processes: %d\n", i, num_processes);
 		free(ld_processes.path[i]);
 		i++;
 		next_slot(timer_id);
@@ -164,6 +168,7 @@ static void * ld_routine(void * args) {
 	done = 1;
 	detach_event(timer_id);
 	pthread_exit(NULL);
+
 }
 
 static void read_config(const char * path) {
