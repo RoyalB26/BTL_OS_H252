@@ -95,7 +95,7 @@ struct pcb_t * get_mlq_proc(void) {
 	if (proc != NULL)
 		enqueue(&running_list, proc);
 
-    pthread_mutex_unlock(&queue_lock)
+    pthread_mutex_unlock(&queue_lock);
 	return proc;
 }
 
