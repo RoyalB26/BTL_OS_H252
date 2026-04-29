@@ -149,3 +149,9 @@ struct memphy_struct {
 };
 
 #endif
+
+#ifdef MM64
+
+int is_canonical(uint64_t vaddr);
+
+#endif

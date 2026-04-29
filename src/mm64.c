@@ -12,12 +12,16 @@
  * PAGING based Memory Management
  * Memory management unit mm/mm.c
  */
+#include "os-cfg.h"
+#include "os-mm.h"
 
 #include "mm64.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+
+#include <string.h>
 
 #if defined(MM64)
 
@@ -117,7 +121,7 @@ int pte_set_swap(struct pcb_t *caller, addr_t pgn, int swptyp, addr_t swpoff)
   addr_t pt=0;
 	
   // dummy pte alloc to avoid runtime error
-  pte = malloc(sizeof(addr_t));
+  // pte = malloc(sizeof(addr_t));
 #ifdef MM64	
   /* Get value from the system */
   /* TODO Perform multi-level page mapping */
@@ -125,7 +129,47 @@ int pte_set_swap(struct pcb_t *caller, addr_t pgn, int swptyp, addr_t swpoff)
   //... krnl->mm->pgd
   //... krnl->mm->pt
   //pte = &krnl->mm->pt;
+  if(!caller->mm.pgd) {
+      caller->mm.pgd = (uint64_t *)malloc(512 * sizeof(uint64_t));
+      if(!caller->mm.pgd) return -1; 
+      memset(caller->mm.pgd, 0, 512 * sizeof(uint64_t));
+    }
+
+    uint64_t *p4d_table = (uint64_t *)caller->mm.pgd[pgd];
+    if(!p4d_table) {
+      p4d_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
+      if(!p4d_table) return -1;
+      memset(p4d_table, 0, 512 * sizeof(p4d_table));
+      caller->mm.pgd[pgd] = (uint64_t)p4d_table;
+    }
+
+    uint64_t *pud_table = (uint64_t *)p4d_table[p4d];
+    if(!pud_table) {
+      pud_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
+      if(!pud_table) return -1;
+      memset(pud_table, 0, 512 * sizeof(uint64_t));
+      p4d_table[p4d] = (uint64_t)pud_table;
+    }
+
+    uint64_t *pmd_table = (uint64_t *)pud_table[pud];
+    if(!pmd_table) {
+      pmd_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
+      if(!pmd_table) return -1;
+      memset(pmd_table, 0, 512 * sizeof(uint64_t));
+      pud_table[pud] = (uint64_t)pmd_table;
+    }
+
+    uint64_t *pt_table = (uint64_t *)pmd_table[pmd];
+    if(!pt_table) {
+      pt_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
+      if(!pt_table) return -1;
+      memset(pt_table, 0, 512 * sizeof(uint64_t));
+      pmd_table[pmd] = (uint64_t)pt_table;
+    }
+    pte = (addr_t *)&pt_table[pt];
+
 #else
+  struct krnl_t *krnl = caller->krnl;
   pte = &krnl->mm->pgd[pgn];
 #endif
 	
@@ -155,7 +199,7 @@ int pte_set_fpn(struct pcb_t *caller, addr_t pgn, addr_t fpn)
   addr_t pt=0;
 	
   // dummy pte alloc to avoid runtime error
-  pte = malloc(sizeof(addr_t));
+  // pte = malloc(sizeof(addr_t));
 #ifdef MM64	
   /* Get value from the system */
   /* TODO Perform multi-level page mapping */
@@ -163,7 +207,46 @@ int pte_set_fpn(struct pcb_t *caller, addr_t pgn, addr_t fpn)
   //... krnl->mm->pgd
   //... krnl->mm->pt
   //pte = &krnl->mm->pt;
+  if(!caller->mm.pgd) {
+      caller->mm.pgd = (uint64_t *)malloc(512 * sizeof(uint64_t));
+      if(!caller->mm.pgd) return -1; 
+      memset(caller->mm.pgd, 0, 512 * sizeof(uint64_t));
+    }
+
+    uint64_t *p4d_table = (uint64_t *)caller->mm.pgd[pgd];
+    if(!p4d_table) {
+      p4d_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
+      if(!p4d_table) return -1;
+      memset(p4d_table, 0, 512 * sizeof(p4d_table));
+      caller->mm.pgd[pgd] = (uint64_t)p4d_table;
+    }
+
+    uint64_t *pud_table = (uint64_t *)p4d_table[p4d];
+    if(!pud_table) {
+      pud_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
+      if(!pud_table) return -1;
+      memset(pud_table, 0, 512 * sizeof(uint64_t));
+      p4d_table[p4d] = (uint64_t)pud_table;
+    }
+
+    uint64_t *pmd_table = (uint64_t *)pud_table[pud];
+    if(!pmd_table) {
+      pmd_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
+      if(!pmd_table) return -1;
+      memset(pmd_table, 0, 512 * sizeof(uint64_t));
+      pud_table[pud] = (uint64_t)pmd_table;
+    }
+
+    uint64_t *pt_table = (uint64_t *)pmd_table[pmd];
+    if(!pt_table) {
+      pt_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
+      if(!pt_table) return -1;
+      memset(pt_table, 0, 512 * sizeof(uint64_t));
+      pmd_table[pmd] = (uint64_t)pt_table;
+    }
+    pte = (addr_t *)&pt_table[pt];
 #else
+  struct krnl_t *krnl = caller->krnl;
   pte = &krnl->mm->pgd[pgn];
 #endif
 
@@ -196,7 +279,21 @@ uint32_t pte_get_entry(struct pcb_t *caller, addr_t pgn)
   //... krnl->mm->pgd
   //... krnl->mm->pt
   //pte = &krnl->mm->pt;	
-	
+  #ifdef MM64
+  if(!caller->mm.pgd) return 0;
+  uint64_t *p4d_table = (uint64_t *)caller->mm.pgd[pgd];
+  if(!p4d_table) return 0;
+  uint64_t *pud_table = (uint64_t *)p4d_table[p4d];
+  if(!pud_table) return 0;
+  uint64_t *pmd_table = (uint64_t *)pud_table[pud];
+  if(!pmd_table) return 0;
+  uint64_t *pt_table = (uint64_t *)pmd_table[pmd];
+  if(!pt_table) return 0;
+  pte = (uint32_t)pt_table[pt];
+  #else
+  // 32bit
+  #endif
+
   return pte;
 }
 
@@ -213,6 +310,16 @@ int pte_set_entry(struct pcb_t *caller, addr_t pgn, uint32_t pte_val)
 	return 0;
 }
 
+#ifdef MM64
+
+int is_canonical(uint64_t vaddr) {
+  uint64_t top_bits = vaddr >> 57;
+  // 7 bit dau 0 la user, 1 la kernel
+  if(top_bits == 0x00 || top_bits == 0x7F) return 1;
+  return 0;
+}
+
+#endif
 
 /*
  * vmap_pgd_memset - map a range of page at aligned address
@@ -221,12 +328,65 @@ int vmap_pgd_memset(struct pcb_t *caller,           // process call
                     addr_t addr,                       // start address which is aligned to pagesz
                     int pgnum)                      // num of mapping page
 {
-  //int pgit = 0;
-  //uint64_t pattern = 0xdeadbeef;
+  int pgit = 0;
+  uint64_t pattern = 0xdeadbeef;
 
   /* TODO memset the page table with given pattern
    */
+  for(pgit = 0; pgit < pgnum; pgit++) {
+    addr_t vaddr = addr + (pgit * 512);
 
+    #ifdef MM64
+
+    if(!is_canonical(vaddr)) return -1;
+    addr_t pgd, p4d, pud, pmd, pt;
+    get_pd_from_address(vaddr, &pgd, &p4d, &pud, &pmd, &pt);
+
+    if(!caller->mm.pgd) {
+      caller->mm.pgd = (uint64_t *)malloc(512 * sizeof(uint64_t));
+      if(!caller->mm.pgd) return -1; 
+      memset(caller->mm.pgd, 0, 512 * sizeof(uint64_t));
+    }
+
+    uint64_t *p4d_table = (uint64_t *)caller->mm.pgd[pgd];
+    if(!p4d_table) {
+      p4d_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
+      if(!p4d_table) return -1;
+      memset(p4d_table, 0, 512 * sizeof(p4d_table));
+      caller->mm.pgd[pgd] = (uint64_t)p4d_table;
+    }
+
+    uint64_t *pud_table = (uint64_t *)p4d_table[p4d];
+    if(!pud_table) {
+      pud_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
+      if(!pud_table) return -1;
+      memset(pud_table, 0, 512 * sizeof(uint64_t));
+      p4d_table[p4d] = (uint64_t)pud_table;
+    }
+
+    uint64_t *pmd_table = (uint64_t *)pud_table[pud];
+    if(!pmd_table) {
+      pmd_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
+      if(!pmd_table) return -1;
+      memset(pmd_table, 0, 512 * sizeof(uint64_t));
+      pud_table[pud] = (uint64_t)pmd_table;
+    }
+
+    uint64_t *pt_table = (uint64_t *)pmd_table[pmd];
+    if(!pt_table) {
+      pt_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
+      if(!pt_table) return -1;
+      memset(pt_table, 0, 512 * sizeof(uint64_t));
+      pmd_table[pmd] = (uint64_t)pt_table;
+    }
+
+    pt_table[pt] = pattern;
+
+    #else
+    // 32 bit
+
+    #endif
+  }
   return 0;
 }
 
@@ -376,11 +536,11 @@ int init_mm(struct mm_struct *mm, struct pcb_t *caller)
   struct vm_area_struct *vma0 = malloc(sizeof(struct vm_area_struct));
 
   /* TODO init page table directory */
-   //mm->pgd = ...
-   //mm->p4d = ...
-   //mm->pud = ...
-   //mm->pmd = ...
-   //mm->pt = ...
+   mm->pgd = NULL;
+   mm->p4d = NULL;
+   mm->pud = NULL;
+   mm->pmd = NULL;
+   mm->pt = NULL;
 
 
   /* By default the owner comes with at least one vma */
