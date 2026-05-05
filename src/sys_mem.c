@@ -41,12 +41,23 @@ int __sys_memmap(struct krnl_t *krnl, uint32_t pid, struct sc_regs* regs)
    /* TODO: Traverse proclist to terminate the proc
     *       stcmp to check the process match proc_name
     */
-//	struct queue_t *running_list = krnl->running_list;
+	struct queue_t *running_list = krnl->running_list;
 
     /* TODO Maching and marking the process */
     /* user process are not allowed to access directly pcb in kernel space of syscall */
     //....
-	
+    if (running_list != NULL){
+        for(int i= 0; i < running_list->size; i++){
+            if (running_list->proc[i] != NULL && running_list->proc[i]->pid == pid){
+                caller= running_list->proc[i];
+                break;
+            }
+        }
+    }
+
+    if (caller == NULL)
+        return -1;
+
    switch (memop) {
    case SYSMEM_MAP_OP:
             /* Reserved process case*/
