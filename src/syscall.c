@@ -32,7 +32,7 @@ int __sys_ni_syscall(struct krnl_t *krnl, struct sc_regs *regs)
     * DUMMY systemcall
     */
 
-   return 0;
+   return -1;
 }
 
 #define __SYSCALL(nr, sym) case nr: return __##sym(krnl,pid,regs);
