@@ -50,7 +50,7 @@ int MEMPHY_seq_read(struct memphy_struct *mp, addr_t addr, BYTE *value)
    if (mp == NULL)
       return -1;
 
-   if (!mp->rdmflg)
+   if (mp->rdmflg)
       return -1; /* Not compatible mode for sequential read */
 
    MEMPHY_mv_csr(mp, addr);
@@ -90,7 +90,7 @@ int MEMPHY_seq_write(struct memphy_struct *mp, addr_t addr, BYTE value)
    if (mp == NULL)
       return -1;
 
-   if (!mp->rdmflg)
+   if (mp->rdmflg)
       return -1; /* Not compatible mode for sequential read */
 
    MEMPHY_mv_csr(mp, addr);
@@ -173,6 +173,14 @@ int MEMPHY_dump(struct memphy_struct *mp)
   /*TODO dump memphy contnt mp->storage
    *     for tracing the memory content
    */
+   if (mp==NULL) return -1;
+   printf("MEMPHY DUMP (%d bytes)\n", mp->maxsz);
+   for (int i = 0; i < mp->maxsz; i++) {
+        printf("%02x ", mp->storage[i]);
+        if ((i + 1) % 16 == 0) printf("\n");
+    }
+    printf("\n");
+   
    return 0;
 }
 
@@ -209,3 +217,4 @@ int init_memphy(struct memphy_struct *mp, addr_t max_size, int randomflg)
 }
 
 // #endif
+

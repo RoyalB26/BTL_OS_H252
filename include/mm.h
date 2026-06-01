@@ -95,8 +95,10 @@
 
 /* Memory range operator */
 /* TODO implement the INCLUDE and OVERLAP checking mechanism */
-#define INCLUDE(x1,x2,y1,y2) (0)
-#define OVERLAP(x1,x2,y1,y2) (0)
+#define INCLUDE(x1,x2,y1,y2) \
+  (((x1))<=(y1))&&((y2)<=(x2)))
+#define OVERLAP(x1,x2,y1,y2) \
+  (((x1)<(y2))&&((y1)<(x2)))
 
 /* VM region prototypes */
 struct vm_rg_struct * init_vm_rg(addr_t rg_start, addr_t rg_end);
@@ -110,6 +112,8 @@ addr_t vm_map_kernel(struct pcb_t *caller, addr_t astart, addr_t aend, addr_t ma
 addr_t alloc_pages_range(struct pcb_t *caller, int incpgnum, struct framephy_struct **frm_lst);
 int __swap_cp_page(struct memphy_struct *mpsrc, addr_t srcfpn,
                 struct memphy_struct *mpdst, addr_t dstfpn) ;
+addr_t vm_map_ram(struct pcb_t *caller, addr_t astart, addr_t aend, addr_t mapstart, int incpgnum, struct vm_rg_struct *ret_rg);
+
 /* KMEM prototypes */
 addr_t __kmalloc(struct pcb_t *caller, int vmaid, int rgid, addr_t size, addr_t *alloc_addr);
 addr_t __kmem_cache_alloc(struct pcb_t *caller, int vmaid, int rgid, int cache_pool_id, addr_t *alloc_addr);

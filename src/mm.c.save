@@ -136,9 +136,7 @@ int pte_set_fpn(struct pcb_t *caller, addr_t pgn, addr_t fpn)
  **/
 uint32_t pte_get_entry(struct pcb_t *caller, addr_t pgn)
 {
-  struct krnl_t *krnl = caller->krnl;
-  return krnl->mm->pgd[pgn];
- // printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
+  printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
   return 0;
 }
 
@@ -149,11 +147,10 @@ uint32_t pte_get_entry(struct pcb_t *caller, addr_t pgn)
  **/
 int pte_set_entry(struct pcb_t *caller, addr_t pgn, uint32_t pte_val)
 {
-  struct krnl_t *krnl = caller->krnl;
-  krnl->mm->pgd[pgn]=pte_val;
-
- // printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
-  return 0;
+	struct krnl_t *krnl = caller->krnl;
+	krnl->mm->pgd[pgn]=pte_val;
+	
+	return 0;
 }
 
 /*
@@ -163,15 +160,7 @@ int vmap_pgd_memset(struct pcb_t *caller,           // process call
                     addr_t addr,                       // start address which is aligned to pagesz
                     int pgnum)                      // num of mapping page
 {
-    addr_t pgn;
-    struct krnl_t *krnl = caller->krnl;
-
-    for (int i = 0; i < pgnum; i++)
-    {
-        pgn = PAGING_PGN(addr) + i;
-        krnl->mm->pgd[pgn] = 0xdeadbeef;
-    }
-  //printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
+  printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
   return 0;
 }
 
@@ -183,23 +172,8 @@ addr_t vmap_page_range(struct pcb_t *caller,           // process call
                     int pgnum,                      // num of mapping page
                     struct framephy_struct *frames, // list of the mapped frames
                     struct vm_rg_struct *ret_rg)    // return mapped region, the real mapped fp
-{                                                  // no guarantee all given pages are mapped
-  addr_t pgn;
-  struct framephy_struct *fpit;
-
-  ret_rg->rg_start = addr;
-  ret_rg->rg_end = addr + pgnum * PAGING_PAGESZ;
-
-  pgn = PAGING_PGN(addr);
-
-  fpit = frames;
-
-  for (int i = 0; i < pgnum && fpit != NULL; i++) {
-    pte_set_fpn(caller, pgn + i, fpit->fpn);
-    enlist_pgn_node(&caller->krnl->mm->fifo_pgn,  pgn + i);
-    fpit = fpit->fp_next;
-  }
- // printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
+{                                                   // no guarantee all given pages are mapped
+  printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
   return 0;
 }
 
@@ -212,19 +186,7 @@ addr_t vmap_page_range(struct pcb_t *caller,           // process call
 
 addr_t alloc_pages_range(struct pcb_t *caller, int req_pgnum, struct framephy_struct **frm_lst)
 {
-  addr_t fpn;
-  *frm_lst = NULL;
-  for (int i = 0; i < req_pgnum; i++)
-  {
-    if (MEMPHY_get_freefp(caller->mram, &fpn) != 0) return -1;
-    struct framephy_struct *newfp = malloc(sizeof(struct framephy_struct));
-    if (newfp == NULL) return -1;
-    newfp->fpn = fpn;
-    newfp->owner = &caller->mm;
-    newfp->fp_next = *frm_lst;
-    *frm_lst = newfp;
-  }
-  // printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
+  printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
   return 0;
 }
 
@@ -239,13 +201,7 @@ addr_t alloc_pages_range(struct pcb_t *caller, int req_pgnum, struct framephy_st
  */
 addr_t vm_map_ram(struct pcb_t *caller, addr_t astart, addr_t aend, addr_t mapstart, int incpgnum, struct vm_rg_struct *ret_rg)
 {
-  struct framephy_struct *frm_lst = NULL;
-  if (alloc_pages_range(caller, incpgnum, &frm_lst) < 0) return -1;
-  if (vmap_page_range(caller, mapstart, incpgnum, frm_lst, ret_rg) < 0) return -1;
-
-  ret_rg->rg_start = mapstart;
-  ret_rg->rg_end   = mapstart + incpgnum * PAGING_PAGESZ;
-  // printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
+  printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
   return 0;
 }
 
@@ -255,169 +211,100 @@ addr_t vm_map_ram(struct pcb_t *caller, addr_t astart, addr_t aend, addr_t mapst
  * @mpdst  : destination memphy
  * @dstfpn : destination physical page number (FPN)
  **/
-
 int __swap_cp_page(struct memphy_struct *mpsrc, addr_t srcfpn,
                    struct memphy_struct *mpdst, addr_t dstfpn)
 {
-  int cellidx;
-  addr_t addrsrc, addrdst;
-  for (cellidx = 0; cellidx < PAGING_PAGESZ; cellidx++)
-  {
-    addrsrc = srcfpn * PAGING_PAGESZ + cellidx;
-    addrdst = dstfpn * PAGING_PAGESZ + cellidx;
-
-    BYTE data;
-    MEMPHY_read(mpsrc, addrsrc, &data);
-    MEMPHY_write(mpdst, addrdst, data);
-  }
-
-  // printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
+  printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
   return 0;
 }
-
 
 /*
  *Initialize a empty Memory Management instance
  * @mm:     self mm
  * @caller: mm owner
  */
-int init_mm(struct mm_struct *mm, struct pcb_t *caller)
+int init_mm(struct mm_struct *mm,
+            struct pcb_t *caller)
 {
-  // printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
-  struct vm_area_struct *vma0;
-  mm->pgd = malloc(PAGING_MAX_PGN * sizeof(ADDR_TYPE));
-  memset(mm->pgd, 0, PAGING_MAX_PGN * sizeof(ADDR_TYPE));
-  mm->fifo_pgn = NULL;
-  mm->kcpooltbl = NULL;
-  memset(mm->symrgtbl, 0, sizeof(mm->symrgtbl));
-  vma0 = malloc(sizeof(struct vm_area_struct));
-  vma0->vm_id = 0;
-  vma0->vm_start = 0;
-  vma0->vm_end = 0;
-  vma0->sbrk = 0;
-  struct vm_rg_struct *first_rg = init_vm_rg(0, 0);
-  enlist_vm_rg_node(&vma0->vm_freerg_list, first_rg);
-  vma0->vm_next = NULL;
-  vma0->vm_mm = mm;
-  mm->mmap = vma0;
+    struct vm_area_struct *vma0;
 
-  return 0;
+    mm->pgd =
+        malloc(PAGING_MAX_PGN * sizeof(uint32_t));
+
+    memset(mm->pgd,
+           0,
+           PAGING_MAX_PGN * sizeof(uint32_t));
+
+    mm->fifo_pgn = NULL;
+    mm->kcpooltbl = NULL;
+
+    memset(mm->symrgtbl,
+           0,
+           sizeof(mm->symrgtbl));
+
+    vma0 = malloc(sizeof(struct vm_area_struct));
+
+    vma0->vm_id = 0;
+    vma0->vm_start = 0;
+    vma0->vm_end = 0;
+    vma0->sbrk = 0;
+
+    struct vm_rg_struct *first_rg =
+        init_vm_rg(0, 0);
+
+    enlist_vm_rg_node(
+        &vma0->vm_freerg_list,
+        first_rg);
+
+    vma0->vm_next = NULL;
+    vma0->vm_mm = mm;
+
+    mm->mmap = vma0;
+
+    return 0;
 }
 
-struct vm_rg_struct *init_vm_rg(addr_t rg_start, addr_t rg_end)
-{
-  struct vm_rg_struct *rgnode = malloc(sizeof(struct vm_rg_struct));
 
-  rgnode->rg_start = rg_start;
-  rgnode->rg_end = rg_end;
-  rgnode->rg_next = NULL;
-
-  //printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
-  return rgnode;
-}
 
 int enlist_vm_rg_node(struct vm_rg_struct **rglist, struct vm_rg_struct *rgnode)
 {
-  rgnode->rg_next = *rglist;
-  *rglist = rgnode;
-
-  //printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
+  printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
   return 0;
 }
 
 int enlist_pgn_node(struct pgn_t **plist, addr_t pgn)
 {
-  struct pgn_t *pnode = malloc(sizeof(struct pgn_t));
-
-  pnode->pgn = pgn;
-  pnode->pg_next = *plist;
-  *plist = pnode;
-
-  //printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
+  printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
   return 0;
 }
 
-
 int print_list_fp(struct framephy_struct *ifp)
 {
-  struct framephy_struct *fp = ifp;
-
-  printf("print_list_fp: ");
-  if (fp == NULL) { printf("NULL list\n"); return -1;}
-  printf("\n");
-  while (fp != NULL)
-  {
-    printf("fp[" FORMAT_ADDR "]\n", fp->fpn);
-    fp = fp->fp_next;
-  }
-  printf("\n");
-
-  // printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
+  printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
   return 0;
 }
 
 int print_list_rg(struct vm_rg_struct *irg)
 {
-  struct vm_rg_struct *rg = irg;
-
-  printf("print_list_rg: ");
-  if (rg == NULL) { printf("NULL list\n"); return -1; }
-  printf("\n");
-  while (rg != NULL)
-  {
-    printf("rg[" FORMAT_ADDR "->"  FORMAT_ADDR "]\n", rg->rg_start, rg->rg_end);
-    rg = rg->rg_next;
-  }
-  printf("\n");
-
-  // printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
+  printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
   return 0;
 }
 
 int print_list_vma(struct vm_area_struct *ivma)
 {
-  struct vm_area_struct *vma = ivma;
-
-  printf("print_list_vma: ");
-  if (vma == NULL) { printf("NULL list\n"); return -1; }
-  printf("\n");
-  while (vma != NULL)
-  {
-    printf("va[" FORMAT_ADDR "->" FORMAT_ADDR "]\n", vma->vm_start, vma->vm_end);
-    vma = vma->vm_next;
-  }
-  printf("\n");
-
-  // printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
+  printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
   return 0;
 }
 
 int print_list_pgn(struct pgn_t *ip)
 {
-  printf("print_list_pgn: ");
-  if (ip == NULL) { printf("NULL list\n"); return -1; }
-  printf("\n");
-  while (ip != NULL)
-  {
-    printf("va[" FORMAT_ADDR "]-\n", ip->pgn);
-    ip = ip->pg_next;
-  }
-  printf("n");
-
-  // printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
+  printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
   return 0;
 }
 
 int print_pgtbl(struct pcb_t *caller, uint32_t start, uint32_t end)
 {
-  addr_t pgn_start = PAGING_PGN(start);
-  addr_t pgn_end   = PAGING_PGN(end);
-  struct krnl_t *krnl = caller->krnl;
-  for (addr_t pgn = pgn_start; pgn <= pgn_end; pgn++)
-  {
-     printf("pgd[%u] = 0x%08x\n", (unsigned)pgn, krnl->mm->pgd[pgn]);
-  }
-  // printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
+  printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
   return 0;
 }
 

@@ -278,6 +278,7 @@ int pg_getpage(struct mm_struct *mm, int pgn, int *fpn, struct pcb_t *caller)
 int pg_getval(struct mm_struct *mm, int addr, BYTE *data, struct pcb_t *caller)
 {
   int pgn = PAGING_PGN(addr);
+  int off = PAGING_OFFST(addr);
 //int off = PAGING_OFFST(addr);
   int fpn;
 
@@ -291,6 +292,9 @@ int pg_getval(struct mm_struct *mm, int addr, BYTE *data, struct pcb_t *caller)
    *  MEMPHY READ 
    *  SYSCALL 17 sys_memmap with SYSMEM_IO_READ
    */
+  int phyaddr = (fpn << PAGING_ADDR_FPN_LOBIT) + off;
+
+  MEMPHY_read(caller->mram, phyaddr, data);
 
   return 0;
 }
@@ -304,6 +308,7 @@ int pg_getval(struct mm_struct *mm, int addr, BYTE *data, struct pcb_t *caller)
 int pg_setval(struct mm_struct *mm, int addr, BYTE value, struct pcb_t *caller)
 {
   int pgn = PAGING_PGN(addr);
+  int off = PAGING_OFFST(addr);
 //int off = PAGING_OFFST(addr);
   int fpn;
 
@@ -317,6 +322,9 @@ int pg_setval(struct mm_struct *mm, int addr, BYTE value, struct pcb_t *caller)
    *  MEMPHY WRITE with SYSMEM_IO_WRITE 
    * SYSCALL 17 sys_memmap
    */
+  int phyaddr = (fpn << PAGING_ADDR_FPN_LOBIT) + off;
+
+  MEMPHY_write(caller->mram, phyaddr, value);
 
   return 0;
 }
@@ -337,7 +345,16 @@ int __read(struct pcb_t *caller, int vmaid, int rgid, addr_t offset, BYTE *data)
 
   /* TODO Invalid memory identify */
 
-  pg_getval(caller->krnl->mm, currg->rg_start + offset, data, caller);
+  if (currg == NULL) return -1;
+
+  /* region not allocated */
+  if (currg->rg_start == currg->rg_end) return -1;
+
+  /* out-of-bounds access */
+  if (currg->rg_start + offset >= currg->rg_end) return -1;
+
+  if (pg_getval(caller->krnl->mm, currg->rg_start + offset, data, caller) != 0)
+    return -1;
 
   return 0;
 }
@@ -356,6 +373,7 @@ printf("%s:%d\n",__func__,__LINE__);
   *destination = data;
 #ifdef IODUMP
   /* TODO dump IO content (if needed) */
+  MEMPHY_dump(proc->mram);
 #ifdef PAGETBL_DUMP
   print_pgtbl(proc, 0, -1); // print max TBL
 #endif
@@ -385,7 +403,25 @@ int __write(struct pcb_t *caller, int vmaid, int rgid, addr_t offset, BYTE value
     return -1;
   }
 
-  pg_setval(caller->krnl->mm, currg->rg_start + offset, value, caller);
+   /* region not allocated */
+  if (currg->rg_start == currg->rg_end)
+  {
+    pthread_mutex_unlock(&mmvm_lock);
+    return -1;
+  }
+
+  /* out-of-bounds write */
+  if (currg->rg_start + offset >= currg->rg_end)
+  {
+    pthread_mutex_unlock(&mmvm_lock);
+    return -1;
+  }
+
+  if (pg_setval(caller->krnl->mm, currg->rg_start + offset, value, caller) != 0)
+  {
+    pthread_mutex_unlock(&mmvm_lock);
+    return -1;
+  }
 
   pthread_mutex_unlock(&mmvm_lock);
   return 0;
@@ -405,6 +441,7 @@ int libwrite(
   }
 #ifdef IODUMP
   /* TODO dump IO content (if needed) */
+  MEMPHY_dump(proc->mram);
 #ifdef PAGETBL_DUMP
   print_pgtbl(proc, 0, -1); // print max TBL
 #endif
@@ -656,7 +693,14 @@ int find_victim_page(struct mm_struct *mm, addr_t *retpgn)
     pg = pg->pg_next;
   }
   *retpgn = pg->pgn;
-  prev->pg_next = NULL;
+  if (prev == NULL)
+  {
+    mm->fifo_pgn = NULL;
+  }
+  else
+  {
+    prev->pg_next = NULL;
+  }
 
   free(pg);
 
