@@ -80,6 +80,12 @@ struct pcb_t * get_mlq_proc(void) {
 					// Lấy tiến trình ra và giảm số slot
 					proc = dequeue(&mlq_ready_queue[current_prio]);
 					slot[current_prio]--;
+
+					// Nếu sau khi lấy mà hàng đợi hết slot, ta chủ động xoay
+					if (slot[current_prio] == 0) {
+						slot[current_prio] = MAX_PRIO - current_prio;
+						current_prio = (current_prio + 1) % MAX_PRIO;
+					}
 					break;
 				} else {
 					// Hết slot, nạp lại slot cho hàng đợi này theo công thức

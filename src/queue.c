@@ -27,29 +27,37 @@ struct pcb_t *dequeue(struct queue_t *q)
          * in the queue [q] and remember to remove it from q
          * */
         if (empty(q)) return NULL;
-        int highestPR_idx = 0;
+        // int highestPR_idx = 0;
 
         // Tìm vị trí của tiến trình có độ ưu tiên cao nhất (giá trị nhỏ nhất)
-        for (int i = 1; i < q->size; i++) {
-#ifdef MLQ_SCHED
-                if (q->proc[i]->prio < q->proc[highestPR_idx]->prio)
-#else
-                if (q->proc[i]->priority < q->proc[highestPR_idx]->priority)
-#endif
-                {
-                        highestPR_idx = i;
-                }
-        }
+//         for (int i = 1; i < q->size; i++) {
+// #ifdef MLQ_SCHED
+//                 if (q->proc[i]->prio < q->proc[highestPR_idx]->prio)
+// #else
+//                 if (q->proc[i]->priority < q->proc[highestPR_idx]->priority)
+// #endif
+//                 {
+//                         highestPR_idx = i;
+//                 }
+//         }
 
-        // Lưu lại tiến trình cần lấy ra
-        struct pcb_t *return_proc = q->proc[highestPR_idx];
+//         // Lưu lại tiến trình cần lấy ra
+//         struct pcb_t *return_proc = q->proc[highestPR_idx];
 
-        // Dịch các phần tử phía sau sang trái để lấp đầy khoảng trống
-        for (int i = highestPR_idx; i < q->size - 1; i++) {
+//         // Dịch các phần tử phía sau sang trái để lấp đầy khoảng trống
+//         for (int i = highestPR_idx; i < q->size - 1; i++) {
+//                 q->proc[i] = q->proc[i + 1];
+//         }
+
+//         q->size--; // Giảm kích thước hàng đợi
+//         return return_proc;
+        
+        // Mỗi hàng đợi ứng với 1 mức độ ưu tiên => chỉ cần lấy phần tử đầu theo FIFO
+        struct pcb_t *return_proc = q->proc[0];
+        for(int i = 0; i < q->size - 1; i++) {
                 q->proc[i] = q->proc[i + 1];
-        }
-
-        q->size--; // Giảm kích thước hàng đợi
+        } 
+        q->size--;
         return return_proc;
 }
 
