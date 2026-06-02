@@ -553,13 +553,14 @@ int init_mm(struct mm_struct *mm, struct pcb_t *caller)
 
   /* TODO update VMA0 next */
   // vma0->next = ...
+  vma0->vm_next= NULL;
 
   /* Point vma owner backward */
-  //vma0->vm_mm = mm; 
+  vma0->vm_mm = mm; 
 
   /* TODO: update mmap */
-  //mm->mmap = ...
-  //mm->symrgtbl = ...
+  mm->mmap = vma0;
+  // mm->symrgtbl
   //mm->kcpooltbl
 
   return 0;
@@ -659,7 +660,7 @@ int print_list_pgn(struct pgn_t *ip)
 
 int print_pgtbl(struct pcb_t *caller, addr_t start, addr_t end)
 {
-//addr_t pgn_start;//, pgn_end;
+// addr_t pgn_start;//, pgn_end;
 //addr_t pgit;
 //struct krnl_t *krnl = caller->krnl;
 
@@ -672,7 +673,8 @@ int print_pgtbl(struct pcb_t *caller, addr_t start, addr_t end)
   get_pd_from_address(start, &pgd, &p4d, &pud, &pmd, &pt);
 
   /* TODO traverse the page map and dump the page directory entries */
-
+  printf("pgtbl:\n");
+  printf("PDG=%ld\n", pgd);
   return 0;
 }
 

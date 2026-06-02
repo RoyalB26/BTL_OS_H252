@@ -32,14 +32,17 @@ int __sys_ni_syscall(struct krnl_t *krnl, struct sc_regs *regs)
     * DUMMY systemcall
     */
 
-   return -1;
+   return 1;
 }
 
-#define __SYSCALL(nr, sym) case nr: return __##sym(krnl,pid,regs);
+
 int _syscall(struct krnl_t *krnl, uint32_t pid, uint32_t nr, struct sc_regs* regs)
 {
+
 	switch (nr) {
+   #define __SYSCALL(nr, sym) case nr: return __##sym(krnl,pid,regs);
 	#include "syscalltbl.lst"
+   #undef __SYSCALL
 	default: return __sys_ni_syscall(krnl, regs);
 	}
 };

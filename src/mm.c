@@ -223,17 +223,48 @@ int __swap_cp_page(struct memphy_struct *mpsrc, addr_t srcfpn,
  * @mm:     self mm
  * @caller: mm owner
  */
-int init_mm(struct mm_struct *mm, struct pcb_t *caller)
+int init_mm(struct mm_struct *mm,
+            struct pcb_t *caller)
 {
-  printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
-  return 0;
+    struct vm_area_struct *vma0;
+
+    mm->pgd =
+        malloc(PAGING_MAX_PGN * sizeof(uint32_t));
+
+    memset(mm->pgd,
+           0,
+           PAGING_MAX_PGN * sizeof(uint32_t));
+
+    mm->fifo_pgn = NULL;
+    mm->kcpooltbl = NULL;
+
+    memset(mm->symrgtbl,
+           0,
+           sizeof(mm->symrgtbl));
+
+    vma0 = malloc(sizeof(struct vm_area_struct));
+
+    vma0->vm_id = 0;
+    vma0->vm_start = 0;
+    vma0->vm_end = 0;
+    vma0->sbrk = 0;
+
+    struct vm_rg_struct *first_rg =
+        init_vm_rg(0, 0);
+
+    enlist_vm_rg_node(
+        &vma0->vm_freerg_list,
+        first_rg);
+
+    vma0->vm_next = NULL;
+    vma0->vm_mm = mm;
+
+    mm->mmap = vma0;
+
+    return 0;
 }
 
-struct vm_rg_struct *init_vm_rg(addr_t rg_start, addr_t rg_end)
-{
-  printf("[ERROR] %s: This feature 32 bit mode is deprecated\n", __func__);
-  return 0;
-}
+
 
 int enlist_vm_rg_node(struct vm_rg_struct **rglist, struct vm_rg_struct *rgnode)
 {

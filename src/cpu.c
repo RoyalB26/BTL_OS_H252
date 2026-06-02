@@ -22,6 +22,7 @@ int alloc(struct pcb_t *proc, uint32_t size, uint32_t reg_index)
 		proc->regs[reg_index] = addr;
 		return 0;
 	}
+	
 }
 
 int free_data(struct pcb_t *proc, uint32_t reg_index)
@@ -61,6 +62,11 @@ int write(
 int run(struct pcb_t *proc)
 {
 	/* Check if Program Counter point to the proper instruction */
+
+	if (proc == NULL){
+		return 1;
+	}
+
 	if (proc->pc >= proc->code->size)
 	{
 		return 1;
@@ -69,6 +75,7 @@ int run(struct pcb_t *proc)
 	struct inst_t ins = proc->code->text[proc->pc];
 	proc->pc++;
 	int stat = 1;
+	// printf("Proc %d line %d\n", proc->pid, proc->pc);
 switch (ins.opcode)
 	{
 	case CALC:
@@ -78,7 +85,9 @@ switch (ins.opcode)
 #ifdef MM_PAGING
 		stat = liballoc(proc, ins.arg_0, ins.arg_1);
 #else
+		
 		stat = alloc(proc, ins.arg_0, ins.arg_1);
+		
 #endif
 		break;
 #ifdef MM_PAGING		

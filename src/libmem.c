@@ -88,8 +88,9 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, addr_t size, addr_t *allo
   }
 
   /* TODO get_free_vmrg_area FAILED handle the region management (Fig.6)*/
-
+  
   /*Attempt to increate limit to get space */
+  
 #ifdef MM64
   inc_sz = (uint32_t)(size/(int)PAGING64_PAGESZ);
   inc_sz = inc_sz + 1;
@@ -112,6 +113,7 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, addr_t size, addr_t *allo
 #else
   regs.a3 = PAGING_PAGE_ALIGNSZ(size);
 #endif  
+  
   _syscall(caller->krnl, caller->pid, 17, &regs); /* SYSCALL 17 sys_memmap */
 
   /*Successful increase limit */
@@ -173,6 +175,7 @@ int __free(struct pcb_t *caller, int vmaid, int rgid)
 int liballoc(struct pcb_t *proc, addr_t size, uint32_t reg_index)
 {
   addr_t  addr;
+
   int val = __alloc(proc, 0, reg_index, size, &addr);
   if (val == -1)
   {
@@ -180,6 +183,7 @@ int liballoc(struct pcb_t *proc, addr_t size, uint32_t reg_index)
   }
 #ifdef IODUMP
   /* TODO dump IO content (if needed) */
+  printf("liballoc: 178\n");
 #ifdef PAGETBL_DUMP
   print_pgtbl(proc, 0, -1); // print max TBL
 #endif
@@ -205,6 +209,7 @@ int libfree(struct pcb_t *proc, uint32_t reg_index)
 printf("%s:%d\n",__func__,__LINE__);
 #ifdef IODUMP
   /* TODO dump IO content (if needed) */
+  printf("libfree: 218\n");
 #ifdef PAGETBL_DUMP
   print_pgtbl(proc, 0, -1); // print max TBL
 #endif
@@ -356,6 +361,7 @@ printf("%s:%d\n",__func__,__LINE__);
   *destination = data;
 #ifdef IODUMP
   /* TODO dump IO content (if needed) */
+  printf("libread: 426\n");
 #ifdef PAGETBL_DUMP
   print_pgtbl(proc, 0, -1); // print max TBL
 #endif
@@ -405,6 +411,7 @@ int libwrite(
   }
 #ifdef IODUMP
   /* TODO dump IO content (if needed) */
+  printf("libwrite: 502\n");
 #ifdef PAGETBL_DUMP
   print_pgtbl(proc, 0, -1); // print max TBL
 #endif
@@ -673,11 +680,14 @@ int get_free_vmrg_area(struct pcb_t *caller, int vmaid, int size, struct vm_rg_s
 {
   struct vm_area_struct *cur_vma = get_vma_by_num(caller->krnl->mm, vmaid);
 
+  if (cur_vma == NULL)
+    return -1;
+
   struct vm_rg_struct *rgit = cur_vma->vm_freerg_list;
 
   if (rgit == NULL)
     return -1;
-
+  
   /* Probe unintialized newrg */
   newrg->rg_start = newrg->rg_end = -1;
 

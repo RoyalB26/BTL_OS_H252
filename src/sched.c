@@ -81,11 +81,9 @@ struct pcb_t * get_mlq_proc(void) {
 					proc = dequeue(&mlq_ready_queue[current_prio]);
 					slot[current_prio]--;
 					break;
-				} else {
-					// Hết slot, nạp lại slot cho hàng đợi này theo công thức
-					slot[current_prio] = MAX_PRIO - current_prio;
-					// Chuyển sang hàng đợi kế tiếp
 				}
+				else
+					slot[current_prio] = MAX_PRIO - current_prio;
 			}
 			// Nếu hàng đợi rỗng hoặc vừa dùng hết slot, xoay vòng sang mức ưu tiên tiếp theo
 			current_prio = (current_prio + 1) % MAX_PRIO;
@@ -124,7 +122,7 @@ void add_mlq_proc(struct pcb_t * proc) {
 	proc->krnl->mlq_ready_queue = mlq_ready_queue;
 	proc->krnl->running_list = &running_list;
 
-	/* TODO: put running proc to running_list
+	/* TODO: add proc to running_list
 	 *       It worth to protect by a mechanism.
 	 *
 	 */
@@ -132,7 +130,7 @@ void add_mlq_proc(struct pcb_t * proc) {
 	pthread_mutex_lock(&queue_lock);
 
 	// Lấy tiến trình ra khỏi danh sách đang chạy
-	purgequeue(&running_list, proc);
+	// purgequeue(&running_list, proc);
 
 	// Đưa tiến trình trở lại hàng đợi sẵn sàng tương ứng với mức ưu tiên
 	enqueue(&mlq_ready_queue[proc->prio], proc);
@@ -202,8 +200,6 @@ void add_proc(struct pcb_t * proc) {
 	 */
 
 	pthread_mutex_lock(&queue_lock);
-
-	purgequeue(&running_list, proc); // Lấy tiến trình ra khỏi danh sách đang chạy
 
 	enqueue(&ready_queue, proc);
 	pthread_mutex_unlock(&queue_lock);
