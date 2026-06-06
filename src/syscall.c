@@ -32,9 +32,8 @@ int __sys_ni_syscall(struct krnl_t *krnl, struct sc_regs *regs)
     * DUMMY systemcall
     */
 
-   return 1;
+   return 0;
 }
-
 
 int _syscall(struct krnl_t *krnl, uint32_t pid, uint32_t nr, struct sc_regs* regs)
 {
@@ -46,4 +45,5 @@ int _syscall(struct krnl_t *krnl, uint32_t pid, uint32_t nr, struct sc_regs* reg
 	default: return __sys_ni_syscall(krnl, regs);
 	}
 };
+
 

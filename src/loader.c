@@ -56,6 +56,7 @@ struct pcb_t * load(const char * path) {
 		(struct page_table_t*)malloc(sizeof(struct page_table_t));
 	proc->bp = PAGE_SIZE;
 	proc->pc = 0;
+
 	/* Read process code from file */
 	FILE * file;
 	if ((file = fopen(path, "r")) == NULL) {
@@ -117,7 +118,6 @@ struct pcb_t * load(const char * path) {
 			exit(1);
 		}
 	}
-
 	return proc;
 }
 

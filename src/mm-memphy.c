@@ -69,9 +69,9 @@ int MEMPHY_read(struct memphy_struct *mp, addr_t addr, BYTE *value)
 {
    if (mp == NULL)
       return -1;
-
-   if (mp->rdmflg)
+   if (mp->rdmflg){
       *value = mp->storage[addr];
+   }
    else /* Sequential access device */
       return MEMPHY_seq_read(mp, addr, value);
 
@@ -109,9 +109,9 @@ int MEMPHY_write(struct memphy_struct *mp, addr_t addr, BYTE data)
 {
    if (mp == NULL)
       return -1;
-
-   if (mp->rdmflg)
+   if (mp->rdmflg){
       mp->storage[addr] = data;
+   }
    else /* Sequential access device */
       return MEMPHY_seq_write(mp, addr, data);
 
@@ -152,14 +152,14 @@ int MEMPHY_format(struct memphy_struct *mp, int pagesz)
 
 int MEMPHY_get_freefp(struct memphy_struct *mp, addr_t *retfpn)
 {
+   
    struct framephy_struct *fp = mp->free_fp_list;
-
+   while(fp->fpn == 0) fp= fp->fp_next;
    if (fp == NULL)
       return -1;
-
    *retfpn = fp->fpn;
    mp->free_fp_list = fp->fp_next;
-
+   mp->used_fp_list= NULL;
    /* MEMPHY is iteratively used up until its exhausted
     * No garbage collector acting then it not been released
     */
@@ -173,6 +173,10 @@ int MEMPHY_dump(struct memphy_struct *mp)
   /*TODO dump memphy contnt mp->storage
    *     for tracing the memory content
    */
+  for(int i= 0; i < mp->maxsz; i++){
+   if (mp->storage[i] != 0)
+      printf("storage at addr %d is %d\n", i,mp->storage[i]);
+   }
    return 0;
 }
 
