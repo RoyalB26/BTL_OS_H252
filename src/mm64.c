@@ -140,43 +140,40 @@ int pte_set_swap(struct pcb_t *caller, addr_t pgn, int swptyp, addr_t swpoff)
   }
 
   // 2. Ép kiểu mảng thành mảng con trỏ để lấy địa chỉ bảng P4D an toàn
-  uint64_t **pgd_array = (uint64_t **)caller->mm.pgd;
-  uint64_t *p4d_table = pgd_array[pgd];
+  uint64_t *pgd_table = (uint64_t *)caller->mm.pgd;
+  uint64_t *p4d_table = (uint64_t *)(uintptr_t)pgd_table[pgd];
   if (!p4d_table) {
     p4d_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
     if (!p4d_table) return -1;
     memset(p4d_table, 0, 512 * sizeof(uint64_t));
-    pgd_array[pgd] = p4d_table; // Lưu con trỏ trực tiếp, không ép kiểu số nguyên
+    pgd_table[pgd] = (uint64_t)(uintptr_t)p4d_table; // Lưu con trỏ trực tiếp, không ép kiểu số nguyên
   }
 
   // 3. Xử lý tương tự cho tầng PUD
-  uint64_t **p4d_array = (uint64_t **)p4d_table;
-  uint64_t *pud_table = p4d_array[p4d];
+  uint64_t *pud_table = (uint64_t *)(uintptr_t)p4d_table[p4d];
   if (!pud_table) {
     pud_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
     if (!pud_table) return -1;
     memset(pud_table, 0, 512 * sizeof(uint64_t));
-    p4d_array[p4d] = pud_table;
+    p4d_table[p4d] = (uint64_t)(uintptr_t)pud_table;
   }
 
   // 4. Xử lý tương tự cho tầng PMD
-  uint64_t **pud_array = (uint64_t **)pud_table;
-  uint64_t *pmd_table = pud_array[pud];
+  uint64_t *pmd_table = (uint64_t *)(uintptr_t)pud_table[pud];
   if (!pmd_table) {
     pmd_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
     if (!pmd_table) return -1;
     memset(pmd_table, 0, 512 * sizeof(uint64_t));
-    pud_array[pud] = pmd_table;
+    pud_table[pud] = (uint64_t)(uintptr_t)pmd_table;
   }
 
   // 5. Xử lý tương tự cho tầng PT
-  uint64_t **pmd_array = (uint64_t **)pmd_table;
-  uint64_t *pt_table = pmd_array[pmd];
+  uint64_t *pt_table = (uint64_t *)(uintptr_t)pmd_table[pmd];
   if (!pt_table) {
     pt_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
     if (!pt_table) return -1;
     memset(pt_table, 0, 512 * sizeof(uint64_t));
-    pmd_array[pmd] = pt_table;
+    pmd_table[pmd] = (uint64_t)(uintptr_t)pt_table;
   }
 
   // Điểm đích PTE cuối cùng (Trỏ chính xác vào phần tử uint64_t của bảng PT)
@@ -229,43 +226,40 @@ int pte_set_fpn(struct pcb_t *caller, addr_t pgn, addr_t fpn)
   }
 
   // 2. Ép kiểu mảng thành mảng con trỏ để lấy địa chỉ bảng P4D an toàn
-  uint64_t **pgd_array = (uint64_t **)caller->mm.pgd;
-  uint64_t *p4d_table = pgd_array[pgd];
+  uint64_t *pgd_table = (uint64_t *)caller->mm.pgd;
+  uint64_t *p4d_table = (uint64_t *)(uintptr_t)pgd_table[pgd];
   if (!p4d_table) {
     p4d_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
     if (!p4d_table) return -1;
     memset(p4d_table, 0, 512 * sizeof(uint64_t));
-    pgd_array[pgd] = p4d_table; // Lưu con trỏ trực tiếp, không ép kiểu số nguyên
+    pgd_table[pgd] = (uint64_t)(uintptr_t)p4d_table; // Lưu con trỏ trực tiếp, không ép kiểu số nguyên
   }
 
   // 3. Xử lý tương tự cho tầng PUD
-  uint64_t **p4d_array = (uint64_t **)p4d_table;
-  uint64_t *pud_table = p4d_array[p4d];
+  uint64_t *pud_table = (uint64_t *)(uintptr_t)p4d_table[p4d];
   if (!pud_table) {
     pud_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
     if (!pud_table) return -1;
     memset(pud_table, 0, 512 * sizeof(uint64_t));
-    p4d_array[p4d] = pud_table;
+    p4d_table[p4d] = (uint64_t)(uintptr_t)pud_table;
   }
 
   // 4. Xử lý tương tự cho tầng PMD
-  uint64_t **pud_array = (uint64_t **)pud_table;
-  uint64_t *pmd_table = pud_array[pud];
+  uint64_t *pmd_table = (uint64_t *)(uintptr_t)pud_table[pud];
   if (!pmd_table) {
     pmd_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
     if (!pmd_table) return -1;
     memset(pmd_table, 0, 512 * sizeof(uint64_t));
-    pud_array[pud] = pmd_table;
+    pud_table[pud] = (uint64_t)(uintptr_t)pmd_table;
   }
 
   // 5. Xử lý tương tự cho tầng PT
-  uint64_t **pmd_array = (uint64_t **)pmd_table;
-  uint64_t *pt_table = pmd_array[pmd];
+  uint64_t *pt_table = (uint64_t *)(uintptr_t)pmd_table[pmd];
   if (!pt_table) {
     pt_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
     if (!pt_table) return -1;
     memset(pt_table, 0, 512 * sizeof(uint64_t));
-    pmd_array[pmd] = pt_table;
+    pmd_table[pmd] = (uint64_t)(uintptr_t)pt_table;
   }
 
   // Điểm đích PTE cuối cùng (Trỏ chính xác vào phần tử uint64_t của bảng PT)
@@ -308,25 +302,25 @@ uint32_t pte_get_entry(struct pcb_t *caller, addr_t pgn)
 
   if (!caller->mm.pgd) return 0;
 
-  uint64_t **pgd_array = (uint64_t **)caller->mm.pgd;
-  uint64_t *p4d_table = pgd_array[pgd];
+  uint64_t *pgd_table = (uint64_t *)caller->mm.pgd;
+  uint64_t *p4d_table = (uint64_t *)(uintptr_t)pgd_table[pgd];
   if (!p4d_table) return 0;
 
-  uint64_t **p4d_array = (uint64_t **)p4d_table;
-  uint64_t *pud_table = p4d_array[p4d];
+  uint64_t *pud_table = (uint64_t *)(uintptr_t)p4d_table[p4d];
   if (!pud_table) return 0;
 
-  uint64_t **pud_array = (uint64_t **)pud_table;
-  uint64_t *pmd_table = pud_array[pud];
+  uint64_t *pmd_table = (uint64_t *)(uintptr_t)pud_table[pud];
   if (!pmd_table) return 0;
 
-  uint64_t **pmd_array = (uint64_t **)pmd_table;
-  uint64_t *pt_table = pmd_array[pmd];
+  uint64_t *pt_table = (uint64_t *)(uintptr_t)pmd_table[pmd];
   if (!pt_table) return 0;
 
   pte = (uint32_t)pt_table[pt];
   #else
   // 32bit
+  if (!caller->mm.pgd) return 0;
+  return ((uint32_t *)caller->mm.pgd)[pgn];
+  
   #endif
 
   return pte;
@@ -384,43 +378,40 @@ int vmap_pgd_memset(struct pcb_t *caller,           // process call
   }
 
   // 2. Ép kiểu mảng thành mảng con trỏ để lấy địa chỉ bảng P4D an toàn
-  uint64_t **pgd_array = (uint64_t **)caller->mm.pgd;
-  uint64_t *p4d_table = pgd_array[pgd];
+  uint64_t *pgd_table = (uint64_t *)caller->mm.pgd;
+  uint64_t *p4d_table = (uint64_t *)(uintptr_t)pgd_table[pgd];
   if (!p4d_table) {
     p4d_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
     if (!p4d_table) return -1;
     memset(p4d_table, 0, 512 * sizeof(uint64_t));
-    pgd_array[pgd] = p4d_table; // Lưu con trỏ trực tiếp, không ép kiểu số nguyên
+    pgd_table[pgd] = (uint64_t)(uintptr_t)p4d_table; // Lưu con trỏ trực tiếp, không ép kiểu số nguyên
   }
 
   // 3. Xử lý tương tự cho tầng PUD
-  uint64_t **p4d_array = (uint64_t **)p4d_table;
-  uint64_t *pud_table = p4d_array[p4d];
+  uint64_t *pud_table = (uint64_t *)(uintptr_t)p4d_table[p4d];
   if (!pud_table) {
     pud_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
     if (!pud_table) return -1;
     memset(pud_table, 0, 512 * sizeof(uint64_t));
-    p4d_array[p4d] = pud_table;
+    p4d_table[p4d] = (uint64_t)(uintptr_t)pud_table;
   }
 
   // 4. Xử lý tương tự cho tầng PMD
-  uint64_t **pud_array = (uint64_t **)pud_table;
-  uint64_t *pmd_table = pud_array[pud];
+  uint64_t *pmd_table = (uint64_t *)(uintptr_t)pud_table[pud];
   if (!pmd_table) {
     pmd_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
     if (!pmd_table) return -1;
     memset(pmd_table, 0, 512 * sizeof(uint64_t));
-    pud_array[pud] = pmd_table;
+    pud_table[pud] = (uint64_t)(uintptr_t)pmd_table;
   }
 
   // 5. Xử lý tương tự cho tầng PT
-  uint64_t **pmd_array = (uint64_t **)pmd_table;
-  uint64_t *pt_table = pmd_array[pmd];
+  uint64_t *pt_table = (uint64_t *)(uintptr_t)pmd_table[pmd];
   if (!pt_table) {
     pt_table = (uint64_t *)malloc(512 * sizeof(uint64_t));
     if (!pt_table) return -1;
     memset(pt_table, 0, 512 * sizeof(uint64_t));
-    pmd_array[pmd] = pt_table;
+    pmd_table[pmd] = (uint64_t)(uintptr_t)pt_table;
   }
 
   pt_table[pt] = (uint64_t) pattern;
@@ -767,17 +758,16 @@ int print_pgtbl(struct pcb_t *caller, addr_t start, addr_t end)
   uint64_t *pgd_table = caller->mm.pgd;
 
   // 3. Trích xuất địa chỉ thực tế của các tầng để in log debug mẫu theo đúng định dạng
-  uint64_t **pgd_array = (uint64_t **)pgd_table;
-  uint64_t *p4d_table = pgd_array[pgd];
-  uint64_t *pud_table = p4d_table ? ((uint64_t **)p4d_table)[p4d] : NULL;
-  uint64_t *pmd_table = pud_table ? ((uint64_t **)pud_table)[pud] : NULL;
+  uint64_t *p4d_table = (uint64_t *)(uintptr_t)pgd_table[pgd];
+  uint64_t *pud_table = p4d_table ? (uint64_t *)(uintptr_t)p4d_table[p4d] : NULL;
+  uint64_t *pmd_table = pud_table ? (uint64_t *)(uintptr_t)pud_table[pud] : NULL;
 
   printf("print_pgtbl:\n");
   printf(" PDG=%llx P4g=%llx PUD=%llx PMD=%llx\n",
-       (unsigned long long)(uintptr_t)pgd_table[pgd],
-       (unsigned long long)(uintptr_t)(p4d_table ? p4d_table[p4d] : 0),
-       (unsigned long long)(uintptr_t)(pud_table ? pud_table[pud] : 0),
-       (unsigned long long)(uintptr_t)(pmd_table ? pmd_table[pmd] : 0));
+       (unsigned long long)(uintptr_t)pgd_table,  // Địa chỉ thực của bảng PGD
+       (unsigned long long)(uintptr_t)p4d_table,  // Địa chỉ thực của bảng P4D
+       (unsigned long long)(uintptr_t)pud_table,  // Địa chỉ thực của bảng PUD
+       (unsigned long long)(uintptr_t)pmd_table); // Địa chỉ thực của bảng PMD
 
   // 4. TIẾN HÀNH DUYỆT CÂY 5 TẦNG ĐỂ IN CHI TIẾT CÁC PTE (Nếu cần dump chi tiết)
   // TẦNG 5: Duyệt qua Page Global Directory (PGD) từ vị trí 'pgd' của địa chỉ start
@@ -831,8 +821,6 @@ int print_pgtbl(struct pcb_t *caller, addr_t start, addr_t end)
             int is_present = (pte_val >> 31) & 1; // Bit 31: Present
             int is_swapped = (pte_val >> 30) & 1; // Bit 30: Swapped
 
-            // Chỉ dump chi tiết các mục nhập thực tế (không in đè log tóm tắt dòng đầu của anh)
-            // printf("   VA: 0x%016lx -> [RAM FPN: %d]\n", vaddr, (int)(pte_val & 0x1FFF));
           }
         }
       }
