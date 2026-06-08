@@ -107,11 +107,14 @@ struct timer_id_t * attach_event() {
 		pthread_cond_init(&container->id.timer_cond, NULL);
 		pthread_mutex_init(&container->id.timer_lock, NULL);
 		if (dev_list == NULL) {
-			dev_list = container;
-			dev_list->next = NULL;
+				dev_list = container;
+				dev_list->next = NULL;
 		}else{
-			container->next = dev_list;
-			dev_list = container;
+				/* Append to end to preserve attach order */
+				struct timer_id_container_t * tail = dev_list;
+				while (tail->next != NULL) tail = tail->next;
+				tail->next = container;
+				container->next = NULL;
 		}
 		return &(container->id);
 	}
