@@ -153,12 +153,16 @@ static void * ld_routine(void * args) {
 		krnl->mram = mram;
 		krnl->mswp = mswp;
 		krnl->active_mswp = active_mswp;
+		/* Ensure process has references to system memory devices */
+		proc->mram = mram;
+		proc->mswp = mswp;
+		proc->active_mswp = active_mswp;
 #endif
 		printf("\tLoaded a process at %s, PID: %d PRIO: %ld\n",
 			ld_processes.path[i], proc->pid, ld_processes.prio[i]);
 
 		add_proc(proc);
-		printf("i: %d, processes: %d\n", i, num_processes);
+		// printf("i: %d, processes: %d\n", i, num_processes);
 		free(ld_processes.path[i]);
 		i++;
 		next_slot(timer_id);
@@ -244,9 +248,12 @@ int main(int argc, char * argv[]) {
 	
 	/* Init timer */
 	int i;
+	/* Attach CPU timer events in reverse order so the timer signals CPUs
+	 * in descending id order (match expected sample ordering). */
 	for (i = 0; i < num_cpus; i++) {
-		args[i].timer_id = attach_event();
-		args[i].id = i;
+		int idx = num_cpus - 1 - i;
+		args[idx].timer_id = attach_event();
+		args[idx].id = idx;
 	}
 	struct timer_id_t * ld_event = attach_event();
 	start_timer();

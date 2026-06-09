@@ -74,23 +74,38 @@ struct pcb_t * get_mlq_proc(void) {
 	}
 
 	if (!is_all_empty) {
-		while (1) {
-			if (!empty(&mlq_ready_queue[current_prio])) {
-				if (slot[current_prio] > 0) {
-					// Lấy tiến trình ra và giảm số slot
-					proc = dequeue(&mlq_ready_queue[current_prio]);
-					slot[current_prio]--;
-					break;
-				} else {
-					// Hết slot, nạp lại slot cho hàng đợi này theo công thức
-					slot[current_prio] = MAX_PRIO - current_prio;
-					// Chuyển sang hàng đợi kế tiếp
-				}
-			}
-			// Nếu hàng đợi rỗng hoặc vừa dùng hết slot, xoay vòng sang mức ưu tiên tiếp theo
-			current_prio = (current_prio + 1) % MAX_PRIO;
-		}
-	}
+        int i = 0;
+        // Vòng lặp duyệt tuyến tính luôn bắt đầu quét từ hàng đợi cấp cao nhất (0) đi xuống
+        while (i < MAX_PRIO) {
+            // SỬA CÚ PHÁP: Kiểm tra hàng đợi cấp i không rỗng VÀ cấp i còn slot thực thi
+            if (!empty(&mlq_ready_queue[i]) && slot[i] > 0) {
+                
+                // Lấy tiến trình ra từ hàng đợi cấp i và giảm slot của cấp đó
+                proc = dequeue(&mlq_ready_queue[i]);
+                slot[i]--;
+                
+                // Cập nhật current_prio về cấp i vừa bốc để đồng bộ log hệ thống
+                current_prio = i;
+
+                // Debug in thông số chuẩn xác ra màn hình cho anh theo dõi
+                // printf("%d\n", current_prio);
+                // printf("%d\n", slot[current_prio]);
+
+                // Nếu sau khi lấy mà hàng đợi cấp này chính thức HẾT SLOT
+                if (slot[current_prio] == 0) {
+                    // Nạp lại slot cho chính nó phục vụ cho chu kỳ reset tổng cục sau
+                    slot[current_prio] = MAX_PRIO - current_prio;
+                    // Chủ động xoay sang cấp tiếp theo cho lượt sau
+                    current_prio = (current_prio + 1) % MAX_PRIO;
+                }
+                
+                break; // Tìm thấy tiến trình rồi -> Thoát ngay vòng lặp while để dispatch
+            }
+            
+            // SỬA LOGIC: Nếu cấp i rỗng hoặc hết slot, tăng i để kiểm tra cấp thấp hơn liền kề
+            i++; 
+        }
+    }
 
 	if (proc != NULL)
 		enqueue(&running_list, proc);
