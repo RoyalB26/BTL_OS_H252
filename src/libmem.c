@@ -654,6 +654,24 @@ int __write_user_mem(struct pcb_t *caller, int vmaid, int rgid, addr_t offset, B
 int free_pcb_memph(struct pcb_t *caller)
 {
   pthread_mutex_lock(&mmvm_lock);
+
+  /* In MM64 mode, pgd is a 5-level pointer tree (not a flat array).
+   * Iterating PAGING_MAX_PGN entries flat would be out-of-bounds.
+   * Instead, walk the fifo_pgn list to release only mapped frames. */
+#ifdef MM64
+  struct pgn_t *pg = caller->krnl->mm->fifo_pgn;
+  while (pg != NULL) {
+    struct pgn_t *next = pg->pg_next;
+    uint32_t pte = pte_get_entry(caller, pg->pgn);
+    if (PAGING_PAGE_PRESENT(pte)) {
+      int fpn = PAGING_FPN(pte);
+      MEMPHY_put_freefp(caller->krnl->mram, fpn);
+    }
+    free(pg);
+    pg = next;
+  }
+  caller->krnl->mm->fifo_pgn = NULL;
+#else
   int pagenum, fpn;
   uint32_t pte;
 
@@ -672,6 +690,7 @@ int free_pcb_memph(struct pcb_t *caller)
       MEMPHY_put_freefp(caller->krnl->active_mswp, fpn);
     }
   }
+#endif
 
   pthread_mutex_unlock(&mmvm_lock);
   return 0;

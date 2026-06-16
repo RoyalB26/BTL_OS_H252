@@ -139,7 +139,19 @@ static void * ld_routine(void * args) {
 	while (i < num_processes) {
 
 		struct pcb_t * proc = load(ld_processes.path[i]);
-		struct krnl_t * krnl = proc->krnl = &os;	
+		/* Cấp phát krnl_t riêng cho mỗi process thay vì dùng &os toàn cục */
+		struct krnl_t * krnl = malloc(sizeof(struct krnl_t));
+		memset(krnl, 0, sizeof(struct krnl_t));
+		proc->krnl = krnl;
+
+		/* Copy kernel page table directory from global os */
+		krnl->krnl_pgd = os.krnl_pgd;
+#ifdef MM64
+		krnl->krnl_p4d = os.krnl_p4d;
+		krnl->krnl_pud = os.krnl_pud;
+		krnl->krnl_pmd = os.krnl_pmd;
+		krnl->krnl_pt  = os.krnl_pt;
+#endif
 
 #ifdef MLQ_SCHED
 		proc->prio = ld_processes.prio[i];

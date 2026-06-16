@@ -283,10 +283,10 @@ int pte_set_fpn(struct pcb_t *caller, addr_t pgn, addr_t fpn)
  * @pgn    : page number
  * @ret    : page table entry
  **/
-uint32_t pte_get_entry(struct pcb_t *caller, addr_t pgn)
+uint64_t pte_get_entry(struct pcb_t *caller, addr_t pgn)
 {
 //struct krnl_t *krnl = caller->krnl;
-  uint32_t pte = 0;
+  uint64_t pte = 0;
   addr_t pgd=0;
   addr_t p4d=0;
   addr_t pud=0;
